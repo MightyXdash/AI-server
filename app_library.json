@@ -1,0 +1,8 @@
+{
+  "calculator": "calc.exe",
+  "notepad": "notepad.exe",
+  "settings": "ms-settings:",
+  "paint": "mspaint.exe",
+  "task manager": "taskmgr.exe",
+  "chrome": "C:/Program Files/Google/Chrome/Application/chrome.exe"
+}

@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>/AI</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --bg2: #eef1f5;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: rgba(17,24,39,0.08);
+      --line-strong: rgba(17,24,39,0.12);
+      --glass: rgba(255,255,255,0.64);
+      --glass-strong: rgba(255,255,255,0.78);
+      --user: linear-gradient(135deg, rgba(10,132,255,0.16), rgba(94,92,230,0.10));
+      --accent: #0A84FF;
+      --accent2: #5E5CE6;
+      --reasoning: #8c919b;
+      --code-bg: rgba(17,24,39,0.06);
+      --shadow: 0 20px 50px rgba(15,23,42,0.10);
+      --radius: 28px;
+      --radius-sm: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 420px at 0% 0%, rgba(10,132,255,0.10), transparent 60%),
+        radial-gradient(700px 380px at 100% 0%, rgba(94,92,230,0.08), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      overflow: hidden;
+    }
+
+    .shell {
+      height: 100%;
+      padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+    }
+
+    .app {
+      height: 100%;
+      max-width: 920px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background: var(--glass);
+      backdrop-filter: blur(26px) saturate(150%);
+      -webkit-backdrop-filter: blur(26px) saturate(150%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: grid;
+      gap: 12px;
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.60), rgba(255,255,255,0.22));
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 14px 30px rgba(10,132,255,0.24);
+      flex: 0 0 auto;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-copy p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.74);
+      color: var(--text);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .select-wrap {
+      position: relative;
+    }
+
+    .select {
+      width: 100%;
+      appearance: none;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.82);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 12px 40px 12px 14px;
+      font: inherit;
+      outline: none;
+      min-height: 46px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .select-wrap::after {
+      content: "⌄";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-52%);
+      color: var(--muted);
+      pointer-events: none;
+      font-size: 18px;
+    }
+
+    .mini-note {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 2px;
+    }
+
+    .chat {
+      overflow: auto;
+      padding: 16px 12px;
+      scroll-behavior: smooth;
+      min-height: 0;
+    }
+
+    .msg {
+      display: flex;
+      gap: 10px;
+      margin: 0 0 16px;
+      align-items: flex-start;
+    }
+
+    .msg.you { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.74);
+      flex: 0 0 auto;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+    }
+
+    .avatar.ai {
+      background: linear-gradient(135deg, rgba(10,132,255,0.18), rgba(94,92,230,0.10));
+      color: var(--accent);
+    }
+
+    .bubble-wrap {
+      max-width: min(760px, calc(100% - 44px));
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .meta {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 0 6px;
+      font-weight: 600;
+    }
+
+    .bubble {
+      border-radius: 22px;
+      padding: 14px 15px;
+      border: 1px solid var(--line);
+      background: var(--glass-strong);
+      box-shadow: 0 18px 40px rgba(15,23,42,0.07);
+      line-height: 1.58;
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .msg.you .bubble {
+      background: var(--user);
+      border-color: rgba(10,132,255,0.18);
+    }
+
+    .bubble p { margin: 0 0 0.9em; }
+    .bubble p:last-child, .bubble pre:last-child, .bubble ul:last-child, .bubble ol:last-child, .bubble blockquote:last-child, .bubble hr:last-child, .bubble details:last-child { margin-bottom: 0; }
+    .bubble h1, .bubble h2, .bubble h3, .bubble h4 { margin: 0 0 0.65em; line-height: 1.2; letter-spacing: -0.03em; }
+    .bubble h1 { font-size: 1.45rem; }
+    .bubble h2 { font-size: 1.25rem; }
+    .bubble h3 { font-size: 1.08rem; }
+    .bubble ul, .bubble ol { margin: 0 0 1em 1.2em; padding: 0; }
+    .bubble li { margin: 0.3em 0; }
+    .bubble blockquote {
+      margin: 0 0 1em;
+      padding: 0.7em 0.9em;
+      background: rgba(10,132,255,0.06);
+      border-left: 3px solid rgba(10,132,255,0.28);
+      border-radius: 12px;
+      color: #374151;
+    }
+    .bubble pre {
+      margin: 0 0 1em;
+      padding: 14px;
+      background: #111827;
+      color: #f9fafb;
+      border-radius: 15px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .bubble code.inline {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: var(--code-bg);
+      padding: 0.18em 0.42em;
+      border-radius: 8px;
+      font-size: 0.92em;
+      border: 1px solid rgba(15,23,42,0.05);
+    }
+    .bubble hr {
+      border: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(17,24,39,0.16), transparent);
+      margin: 1em 0;
+    }
+    .bubble a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+    .reasoning-box {
+      margin: 0 0 1em;
+      border: 1px solid rgba(17,24,39,0.08);
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(17,24,39,0.025);
+    }
+    .reasoning-box summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 11px 13px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      user-select: none;
+    }
+    .reasoning-box summary::-webkit-details-marker { display: none; }
+    .reasoning-body {
+      padding: 0 13px 13px;
+      border-top: 1px solid rgba(17,24,39,0.06);
+      color: var(--reasoning);
+      font-size: 12.5px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .typing { display: inline-flex; gap: 6px; align-items: center; min-height: 16px; }
+    .typing span {
+      width: 7px; height: 7px; border-radius: 999px;
+      background: rgba(17,24,39,0.45);
+      animation: bounce 1s infinite ease-in-out;
+    }
+    .typing span:nth-child(2){ animation-delay:.12s; }
+    .typing span:nth-child(3){ animation-delay:.24s; }
+    @keyframes bounce {
+      0%,80%,100% { transform: translateY(0); opacity: .4; }
+      40% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    .stream-preview { white-space: pre-wrap; min-height: 22px; }
+    .stream-char {
+      display: inline;
+      opacity: 0;
+      animation: charfade 1s ease forwards;
+    }
+    @keyframes charfade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .composer-wrap {
+      padding: 12px;
+      border-top: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.26));
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.80);
+      border: 1px solid var(--line);
+      box-shadow: 0 20px 45px rgba(15,23,42,0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .input {
+      min-height: 50px;
+      max-height: 180px;
+      resize: none;
+      border: 0;
+      outline: none;
+      background: transparent;
+      font: inherit;
+      color: var(--text);
+      line-height: 1.5;
+      padding: 8px 4px;
+    }
+    .input::placeholder { color: #9ca3af; }
+
+    .send {
+      width: 52px;
+      height: 52px;
+      border: 0;
+      border-radius: 17px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 16px 30px rgba(10,132,255,0.24);
+    }
+    .send:disabled { opacity: 0.55; box-shadow: none; cursor: not-allowed; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(245,245,247,0.38);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .overlay.visible { display: flex; }
+
+    .graph-card {
+      width: min(520px, 100%);
+      background: rgba(255,255,255,0.86);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 30px 70px rgba(15,23,42,0.14);
+      overflow: hidden;
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+    .graph-head {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .graph-head h3 { margin: 0; font-size: 16px; letter-spacing: -0.03em; }
+    .graph-head p { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+    .graph-body { padding: 12px; display: grid; gap: 12px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+    .legend-item { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+    .legend-swatch { width: 10px; height: 10px; border-radius: 999px; }
+    .canvas-wrap {
+      width: 100%;
+      aspect-ratio: 1.45 / 1;
+      background: linear-gradient(180deg, rgba(249,250,251,0.96), rgba(243,244,246,0.88));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .metric {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px;
+    }
+    .metric-label { font-size: 11px; color: var(--muted); font-weight: 700; }
+    .metric-value { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; }
+    .metric-note { font-size: 11px; color: var(--muted); }
+
+    @media (max-width: 640px) {
+      .shell { padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)); }
+      .app { border-radius: 22px; }
+      .topbar { padding: 12px 10px 10px; }
+      .controls { grid-template-columns: 1fr; }
+      .bubble-wrap { max-width: calc(100% - 40px); }
+      .bubble { padding: 13px 14px; font-size: 14.5px; }
+      .chat { padding: 14px 8px; }
+      .stats-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="app">
+      <div class="topbar">
+        <div class="topline">
+          <div class="brand">
+            <div class="brand-badge">/AI</div>
+            <div class="brand-copy">
+              <h1>Atlas Local</h1>
+              <p id="topModelLabel">Loading models…</p>
+            </div>
+          </div>
+          <div class="status">
+            <span class="pill" id="statusPill">Local</span>
+            <span id="statusText">Ready</span>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="select-wrap">
+            <select id="modelSelect" class="select"></select>
+          </div>
+          <div class="mini-note" id="modelCount">0 models</div>
+        </div>
+      </div>
+
+      <div id="chat" class="chat"></div>
+
+      <div class="composer-wrap">
+        <div class="composer">
+          <textarea id="input" class="input" placeholder="Message /AI..."></textarea>
+          <button class="send" id="sendBtn" aria-label="Send">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M4 12L20 4L13 20L10.5 13.5L4 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="hardwareOverlay" class="overlay">
+    <div class="graph-card">
+      <div class="graph-head">
+        <div>
+          <h3>Hardware telemetry</h3>
+          <p>Shown only when the hardware tool is called. Humanity survives another day.</p>
+        </div>
+        <div class="pill" id="graphStatus">Captured</div>
+      </div>
+      <div class="graph-body">
+        <div class="legend">
+          <span class="legend-item"><span class="legend-swatch" style="background:#0A84FF"></span>CPU</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#30D158"></span>RAM</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:#FF9F0A"></span>GPU</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="hardwareCanvas"></canvas>
+        </div>
+        <div class="stats-grid">
+          <div class="metric"><div class="metric-label">CPU avg</div><div class="metric-value" id="overlayCpu">--%</div><div class="metric-note">3 sec avg</div></div>
+          <div class="metric"><div class="metric-label">RAM avg</div><div class="metric-value" id="overlayRam">--%</div><div class="metric-note">3 sec avg</div></div>
+          <div class="metric"><div class="metric-label">GPU avg</div><div class="metric-value" id="overlayGpu">--%</div><div class="metric-note" id="overlayGpuName">GPU unavailable</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("input");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusText = document.getElementById("statusText");
+    const statusPill = document.getElementById("statusPill");
+    const modelSelect = document.getElementById("modelSelect");
+    const modelCount = document.getElementById("modelCount");
+    const topModelLabel = document.getElementById("topModelLabel");
+    const hardwareOverlay = document.getElementById("hardwareOverlay");
+    const graphStatus = document.getElementById("graphStatus");
+    const hardwareCanvas = document.getElementById("hardwareCanvas");
+    const overlayCpu = document.getElementById("overlayCpu");
+    const overlayRam = document.getElementById("overlayRam");
+    const overlayGpu = document.getElementById("overlayGpu");
+    const overlayGpuName = document.getElementById("overlayGpuName");
+
+    let selectedModel = "";
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function autosize() {
+      input.style.height = "0px";
+      input.style.height = Math.min(input.scrollHeight, 180) + "px";
+    }
+
+    function formatTimeLabel() {
+      return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function createAvatar(isAI) {
+      const avatar = document.createElement("div");
+      avatar.className = "avatar" + (isAI ? " ai" : "");
+      avatar.innerHTML = isAI
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10v4c0 2.2 1.8 4 4 4h1v2h6v-2h1c2.2 0 4-1.8 4-4v-4c0-4.4-3.6-8-8-8Z" stroke="currentColor" stroke-width="1.7"/><path d="M9 11h.01M15 11h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 12c2.8 0 5-2.2 5-5s-2.2-5-5-5-5 2.2-5 5 2.2 5 5 5Z" stroke="currentColor" stroke-width="1.7"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
+      return avatar;
+    }
+
+    function addMessage(role, initialText = "", options = {}) {
+      const msg = document.createElement("div");
+      msg.className = `msg ${role === "you" ? "you" : "ai"}`;
+
+      const bubbleWrap = document.createElement("div");
+      bubbleWrap.className = "bubble-wrap";
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = role === "you" ? `You • ${formatTimeLabel()}` : `Atlas • ${formatTimeLabel()}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+
+      if (options.typing) {
+        bubble.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+      } else if (role === "you") {
+        bubble.innerHTML = `<p>${escapeHtml(initialText)}</p>`;
+      } else {
+        bubble.innerHTML = renderMarkdown(initialText);
+      }
+
+      bubbleWrap.appendChild(meta);
+      bubbleWrap.appendChild(bubble);
+
+      if (role === "you") {
+        msg.appendChild(bubbleWrap);
+        msg.appendChild(createAvatar(false));
+      } else {
+        msg.appendChild(createAvatar(true));
+        msg.appendChild(bubbleWrap);
+      }
+
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+      return { msg, bubble, rawText: initialText || "" };
+    }
+
+    function extractReasoning(text) {
+      const regex = /<think>([\s\S]*?)<\/think>/gi;
+      let reasoningParts = [];
+      let visible = String(text || "").replace(regex, (_, inner) => {
+        reasoningParts.push((inner || "").trim());
+        return "";
+      });
+      return { reasoning: reasoningParts.join("\n\n").trim(), visible: visible.trim() };
+    }
+
+    function applyInlineMarkdown(text) {
+      let html = escapeHtml(text);
+      html = html.replace(/`([^`]+)`/g, (_, m) => `<code class="inline">${m}</code>`);
+      html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      html = html.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+      html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+      html = html.replace(/_([^_]+)_/g, "<em>$1</em>");
+      html = html.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => `<a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${label}</a>`);
+      return html;
+    }
+
+    function renderParagraphBlock(lines) {
+      if (!lines.length) return "";
+      return `<p>${applyInlineMarkdown(lines.join("<br>"))}</p>`;
+    }
+
+    function renderMarkdown(source) {
+      const extracted = extractReasoning(source || "");
+      const text = extracted.visible;
+      const reasoning = extracted.reasoning;
+      const codeBlocks = [];
+
+      let working = text.replace(/```([\w-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        const token = `@@CODEBLOCK_${codeBlocks.length}@@`;
+        codeBlocks.push({ lang: lang || "", code });
+        return token;
+      });
+
+      const lines = working.split(/\r?\n/);
+      let html = "";
+      let paragraph = [];
+      let inUl = false;
+      let inOl = false;
+      let quoteLines = [];
+
+      function flushParagraph() {
+        html += renderParagraphBlock(paragraph);
+        paragraph = [];
+      }
+      function flushList() {
+        if (inUl) { html += "</ul>"; inUl = false; }
+        if (inOl) { html += "</ol>"; inOl = false; }
+      }
+      function flushQuote() {
+        if (quoteLines.length) {
+          html += `<blockquote>${quoteLines.map(line => applyInlineMarkdown(line)).join("<br>")}</blockquote>`;
+          quoteLines = [];
+        }
+      }
+      function flushAll() {
+        flushParagraph();
+        flushList();
+        flushQuote();
+      }
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+          flushAll();
+          continue;
+        }
+
+        const codeTokenMatch = trimmed.match(/^@@CODEBLOCK_(\d+)@@$/);
+        if (codeTokenMatch) {
+          flushAll();
+          const block = codeBlocks[Number(codeTokenMatch[1])];
+          const langLabel = block.lang ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">${escapeHtml(block.lang)}</div>` : "";
+          html += `<pre>${langLabel}${escapeHtml(block.code)}</pre>`;
+          continue;
+        }
+
+        if (/^---+$/.test(trimmed) || /^\*\*\*+$/.test(trimmed)) {
+          flushAll();
+          html += "<hr>";
+          continue;
+        }
+
+        const heading = trimmed.match(/^(#{1,4})\s+(.*)$/);
+        if (heading) {
+          flushAll();
+          const level = Math.min(4, heading[1].length);
+          html += `<h${level}>${applyInlineMarkdown(heading[2])}</h${level}>`;
+          continue;
+        }
+
+        const quote = trimmed.match(/^>\s?(.*)$/);
+        if (quote) {
+          flushParagraph();
+          flushList();
+          quoteLines.push(quote[1]);
+          continue;
+        } else {
+          flushQuote();
+        }
+
+        const ul = trimmed.match(/^[-*+]\s+(.*)$/);
+        if (ul) {
+          flushParagraph();
+          if (inOl) { html += "</ol>"; inOl = false; }
+          if (!inUl) { html += "<ul>"; inUl = true; }
+          html += `<li>${applyInlineMarkdown(ul[1])}</li>`;
+          continue;
+        }
+
+        const ol = trimmed.match(/^\d+\.\s+(.*)$/);
+        if (ol) {
+          flushParagraph();
+          if (inUl) { html += "</ul>"; inUl = false; }
+          if (!inOl) { html += "<ol>"; inOl = true; }
+          html += `<li>${applyInlineMarkdown(ol[1])}</li>`;
+          continue;
+        }
+
+        flushList();
+        paragraph.push(trimmed);
+      }
+
+      flushAll();
+
+      if (reasoning) {
+        html = `<details class="reasoning-box"><summary>Reasoning</summary><div class="reasoning-body">${escapeHtml(reasoning)}</div></details>` + html;
+      }
+
+      return html || `<p></p>`;
+    }
+
+    function renderStreamingPreview(text) {
+      const extracted = extractReasoning(text || "");
+      let preview = escapeHtml(extracted.visible || "");
+      preview = preview.replace(/\n/g, "<br>");
+      return `${extracted.reasoning ? `<details class="reasoning-box"><summary>Reasoning</summary><div class="reasoning-body">${escapeHtml(extracted.reasoning)}</div></details>` : ""}<div class="stream-preview">${preview}</div>`;
+    }
+
+    function appendAnimatedDelta(target, delta) {
+      for (const ch of delta) {
+        if (ch === "\n") {
+          target.insertAdjacentHTML("beforeend", "<br>");
+        } else {
+          const span = document.createElement("span");
+          span.className = "stream-char";
+          span.textContent = ch;
+          target.appendChild(span);
+        }
+      }
+    }
+
+    function updateStreamBubble(entry, fullText, delta = "") {
+      entry.rawText = fullText;
+      const extracted = extractReasoning(fullText);
+      const reasoningHtml = extracted.reasoning
+        ? `<details class="reasoning-box"><summary>Reasoning</summary><div class="reasoning-body">${escapeHtml(extracted.reasoning)}</div></details>`
+        : "";
+      entry.bubble.innerHTML = `${reasoningHtml}<div class="stream-preview" id="streamPreview"></div>`;
+      const preview = entry.bubble.querySelector("#streamPreview");
+      if (delta && extracted.visible.endsWith(delta)) {
+        const stableText = extracted.visible.slice(0, extracted.visible.length - delta.length);
+        preview.innerHTML = escapeHtml(stableText).replace(/\n/g, "<br>");
+        appendAnimatedDelta(preview, delta);
+      } else {
+        preview.innerHTML = escapeHtml(extracted.visible).replace(/\n/g, "<br>");
+      }
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function finalizeBubble(entry) {
+      entry.bubble.innerHTML = renderMarkdown(entry.rawText);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function loadModels() {
+      try {
+        const res = await fetch("/models");
+        const data = await res.json();
+        const models = Array.isArray(data.models) ? data.models : [];
+        selectedModel = data.default || models[0] || "";
+        modelSelect.innerHTML = "";
+
+        if (!models.length) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "No tool-ready models found";
+          modelSelect.appendChild(opt);
+          modelSelect.disabled = true;
+          topModelLabel.textContent = "No models available";
+          modelCount.textContent = "0 models";
+          return;
+        }
+
+        for (const model of models) {
+          const opt = document.createElement("option");
+          opt.value = model;
+          opt.textContent = model;
+          if (model === selectedModel) opt.selected = true;
+          modelSelect.appendChild(opt);
+        }
+
+        modelCount.textContent = `${models.length} model${models.length === 1 ? "" : "s"}`;
+        topModelLabel.textContent = selectedModel;
+      } catch (err) {
+        modelSelect.innerHTML = `<option>Model load failed</option>`;
+        modelSelect.disabled = true;
+        topModelLabel.textContent = "Model load failed";
+        modelCount.textContent = "0 models";
+      }
+    }
+
+    modelSelect.addEventListener("change", () => {
+      selectedModel = modelSelect.value;
+      topModelLabel.textContent = selectedModel || "No model selected";
+    });
+
+    function showHardwareOverlay(payload) {
+      const summary = payload?.summary || {};
+      overlayCpu.textContent = `${Math.round(summary.cpu_avg || 0)}%`;
+      overlayRam.textContent = `${Math.round(summary.ram_avg || 0)}%`;
+      overlayGpu.textContent = `${Math.round(summary.gpu_avg || 0)}%`;
+      overlayGpuName.textContent = summary.gpu_name || "GPU unavailable";
+      graphStatus.textContent = `${payload?.elapsed_sec || payload?.duration_sec || 3}s captured`;
+      drawHardwareGraph(payload);
+      hardwareOverlay.classList.add("visible");
+    }
+
+    hardwareOverlay.addEventListener("click", (e) => {
+      if (e.target === hardwareOverlay) hardwareOverlay.classList.remove("visible");
+    });
+
+    function drawHardwareGraph(payload) {
+      const canvas = hardwareCanvas;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(220, Math.floor(rect.height * dpr));
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const samples = Array.isArray(payload?.samples) ? payload.samples : [];
+      const pad = { left: 30, right: 10, top: 12, bottom: 24 };
+      const gw = w - pad.left - pad.right;
+      const gh = h - pad.top - pad.bottom;
+
+      ctx.strokeStyle = "rgba(17,24,39,0.08)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (gh / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(w - pad.right, y);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "11px Inter, sans-serif";
+      ctx.textAlign = "right";
+      for (let i = 0; i <= 4; i++) {
+        const value = 100 - i * 25;
+        const y = pad.top + (gh / 4) * i + 4;
+        ctx.fillText(`${value}`, pad.left - 6, y);
+      }
+
+      function drawSeries(key, color) {
+        if (!samples.length) return;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        samples.forEach((sample, idx) => {
+          const x = pad.left + (samples.length === 1 ? 0 : (gw * idx) / (samples.length - 1));
+          const y = pad.top + gh - (Math.max(0, Math.min(100, Number(sample[key] || 0))) / 100) * gh;
+          if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      drawSeries("cpu", "#0A84FF");
+      drawSeries("ram", "#30D158");
+      drawSeries("gpu", "#FF9F0A");
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      if (!selectedModel) {
+        statusText.textContent = "No model";
+        return;
+      }
+
+      addMessage("you", text);
+      input.value = "";
+      autosize();
+      sendBtn.disabled = true;
+      statusText.textContent = "Thinking";
+      statusPill.textContent = selectedModel;
+
+      const aiEntry = addMessage("ai", "", { typing: true });
+      let fullText = "";
+
+      try {
+        const response = await fetch("/ask-stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, model: selectedModel })
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error("Streaming failed.");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const evt = JSON.parse(line);
+
+            if (evt.type === "token") {
+              fullText += evt.delta || "";
+              updateStreamBubble(aiEntry, fullText, evt.delta || "");
+            } else if (evt.type === "clear") {
+              fullText = "";
+              aiEntry.rawText = "";
+              aiEntry.bubble.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+            } else if (evt.type === "hardware") {
+              showHardwareOverlay(evt.payload);
+            } else if (evt.type === "replace" || evt.type === "final") {
+              fullText = evt.text || "";
+              aiEntry.rawText = fullText;
+              finalizeBubble(aiEntry);
+            } else if (evt.type === "error") {
+              fullText = evt.message || "Something broke.";
+              aiEntry.rawText = fullText;
+              finalizeBubble(aiEntry);
+            } else if (evt.type === "done") {
+              aiEntry.rawText = fullText;
+              finalizeBubble(aiEntry);
+            }
+          }
+        }
+      } catch (err) {
+        aiEntry.rawText = `Couldn't reach the backend. ${err}`;
+        finalizeBubble(aiEntry);
+      } finally {
+        sendBtn.disabled = false;
+        statusText.textContent = "Ready";
+        chat.scrollTop = chat.scrollHeight;
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("input", autosize);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    autosize();
+    loadModels();
+  </script>
+</body>
+</html>
